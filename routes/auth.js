@@ -6,14 +6,14 @@ var configJWT = require('../config/jwt')
 var router = express.Router();
 
 router.post('/', (req, res) => {
-  if (!req.body.username || !req.body.password) {
+  if (!req.body.email || !req.body.password) {
     res.json({
       success: false,
       message: 'Invalid request.'
     })
   }
   User.findOne({
-    username: req.body.username
+    email: req.body.email
   }).then((user) => {
     if (!user) {
       res.json({
