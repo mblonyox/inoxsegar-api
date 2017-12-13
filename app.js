@@ -23,8 +23,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors())
 
-app.use('/api/authenticate', auth)
-app.use('/api/users', users);
+app.use('/api', auth, users)
 app.get('/', (req, res) => {
   res.send('API is on /api path.')
 })
