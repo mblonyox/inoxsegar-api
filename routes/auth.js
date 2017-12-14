@@ -72,4 +72,34 @@ router.post('/register', [
   })
 })
 
+router.post('/check_username', [
+  check('username')
+  .isAlphanumeric().withMessage('Nama Pengguna hanya dapat huruf dan angka!')
+  .isLength({ min: 5, max: 40}).withMessage('Nama Pengguna minimal 5 karakter dan maksimal 40 karakter!')
+], (req, res) => {
+  const errors = validationResult(req)
+  if(!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: 'Invalid request.',
+      errors: errors.formatWith(err => err.msg).mapped()
+    })
+  }
+  User.findOne({
+    username: req.body.username
+  }).then((user) => {
+    if (user) {
+      return res.json({
+        success: false,
+        message: 'Nama Pengguna telah terdaftar.'
+      })
+    } else {
+      return res.json({
+        success: true,
+        message: 'Nama Pengguna tersedia.'
+      })
+    }
+  })
+})
+
 module.exports = router
