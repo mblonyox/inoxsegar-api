@@ -12,6 +12,7 @@ var users = require('./routes/users')
 var auth = require('./routes/auth')
 var upload = require('./routes/upload')
 
+mongoose.Promise = global.Promise
 mongoose.connect(configDB.uri, {useMongoClient: true})
 
 var app = express();

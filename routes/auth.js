@@ -1,9 +1,12 @@
 var express = require('express')
 var jwt = require('jsonwebtoken')
+var bcrypt = require('bcrypt')
 var { check, validationResult } = require('express-validator/check')
 var { matchedData } = require('express-validator/filter')
+
 var User = require('../models/user')
 var configJWT = require('../config/jwt')
+var verifyToken = require('../middlewares/verify_token')
 
 var router = express.Router();
 
@@ -21,23 +24,29 @@ router.post('/authenticate', [
   }
   User.findOne({
     email: req.body.email
-  }).then((user) => {
-    if (!user || user.password !== req.body.password) {
-      res.status(401).json({
-        success: false,
-        message: 'Wrong email or password.'
-      })
-    } else {
-      var payload = {
-        username: user.username,
-        email: user.email
+  })
+  .select('+password')
+  .then((user) => {
+    bcrypt.compare(req.body.password, user ? user.password: '')
+    .then((result) => {
+      if (!user || !result) {
+        res.status(401).json({
+          success: false,
+          message: 'Wrong email or password.'
+        })
+      } else {
+        var payload = {
+          username: user.username,
+          email: user.email
+        }
+        res.json({
+          success: true,
+          message: 'Authentication success! Welcome ' + user.username + '.',
+          user: {...user._doc, password: undefined},
+          token: jwt.sign(payload, configJWT.secret)
+        })
       }
-      res.json({
-        success: true,
-        message: 'Authentication success! Welcome ' + user.username + '.',
-        token: jwt.sign(payload, configJWT.secret)
-      })
-    }
+    })
   })
 })
 
@@ -56,20 +65,36 @@ router.post('/register', [
       errors: errors.formatWith(err => err.msg).mapped()
     })
   }
-  validData = matchedData(req)
-  newUser = new User({
-    ...validData
-  })
-  newUser.save(err => {
-    if(err) res.json({
-      success: false,
-      message: err.message
+  let validData = matchedData(req)
+  bcrypt.hash(validData.password, 10)
+  .then((hash) => {
+    validData.password = hash
+    let newUser = new User({
+      ...validData
     })
-    else res.json({
-      success: true,
-      message: 'New user created'
+    newUser.save((err, user) => {
+      if(err) res.json({
+        success: false,
+        message: err.message
+      })
+      else {
+        var payload = {
+          username: user.username,
+          email: user.email
+        }
+        res.json({
+          success: true,
+          message: 'New user created',
+          user,
+          token: jwt.sign(payload, configJWT.secret)
+        })
+      }
     })
   })
+})
+
+router.post('/activate', verifyToken, (req, res) => {
+  
 })
 
 router.post('/check_username', [
