@@ -1,6 +1,7 @@
 var express = require('express')
 var jwt = require('jsonwebtoken')
 var bcrypt = require('bcrypt')
+var axios = require('axios')
 var { check, validationResult } = require('express-validator/check')
 var { matchedData } = require('express-validator/filter')
 
@@ -78,6 +79,13 @@ router.post('/register', [
         message: err.message
       })
       else {
+        var emailData = {
+          username: user.username,
+          email: user.email,
+          activation_code: user.activation_code
+        }
+        var urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
+        axios.get(urlEmail)
         var payload = {
           username: user.username,
           email: user.email
@@ -94,7 +102,32 @@ router.post('/register', [
 })
 
 router.post('/activate', verifyToken, (req, res) => {
-  
+  User.findOne({email: req.user.email}).select('+activation_code')
+  .then((user) => {
+    console.log
+    if(user && user.activation_code === req.body.kode) {
+      user.active = true
+      user.activated_at = Date.now()
+      user.save((err, user) => {
+        if(err) {
+          res.status(503).json({
+            success: false,
+            message: err.message
+          })
+        } else {
+          res.json({
+            success: true,
+            message: 'User activated.'
+          })
+        }
+      })
+    } else {
+      res.status(403).json({
+        success: false,
+        message: 'Wrong activation code.'
+      })
+    }
+  })
 })
 
 router.post('/check_username', [
