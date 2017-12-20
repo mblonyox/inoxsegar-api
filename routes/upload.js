@@ -2,6 +2,7 @@ const express = require('express')
 const tus = require('tus-node-server')
 
 const File = require('../models/file')
+const verifyToken = require('../middlewares/verify_token')
 
 const path = 'files'
 const router = express.Router()
@@ -22,6 +23,7 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     name: metadata.filename,
     size: metadata.size,
     type: metadata.type,
+    uploader: metadata.uploader,
     date: Date(metadata.modified),
     uploaded_date: Date.now(),
     uploaded_length: event.file.uploaded_length,
@@ -33,6 +35,6 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     })
 })
 
-router.all('*', server.handle.bind(server))
+router.all('*',verifyToken, server.handle.bind(server))
 
 module.exports = router
