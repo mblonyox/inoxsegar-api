@@ -104,7 +104,6 @@ router.post('/register', [
 router.post('/activate', verifyToken, (req, res) => {
   User.findOne({email: req.user.email}).select('+activation_code')
   .then((user) => {
-    console.log
     if(user && user.activation_code === req.body.kode) {
       user.active = true
       user.activated_at = Date.now()
@@ -127,6 +126,50 @@ router.post('/activate', verifyToken, (req, res) => {
         message: 'Wrong activation code.'
       })
     }
+  })
+  .catch((err) => {
+    res.status(503).json({
+      success: false,
+      message: err.message
+    })
+  })
+})
+
+router.get('/resend_activation', verifyToken, (req, res) => {
+  User.findOne({email: req.user.email}).select('+activation_code')
+  .then((user) => {
+    var emailData = {
+      username: user.username,
+      email: user.email,
+      activation_code: user.activation_code
+    }
+    var urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
+    axios.get(urlEmail)
+      .then((response) => {
+        if (response.data == 'OK') {
+          res.json({
+            success: true,
+            message: 'Activation email sent.'
+          })
+        } else {
+          res.status(503).json({
+            success: false,
+            message: 'Email failed to sent. Please try again later.'
+          })
+        }
+      })
+      .catch((err) => {
+        res.status(503).json({
+          success: false,
+          message: err.message
+        })
+      })
+  })
+  .catch((err) => {
+    res.status(503).json({
+      success: false,
+      message: err.message
+    })
   })
 })
 
