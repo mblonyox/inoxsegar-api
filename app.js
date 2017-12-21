@@ -26,7 +26,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors())
 
-app.use('/api', auth, users, files, upload)
+app.use('/api', auth, users, files)
+app.use('/api/upload', upload)
 app.get('/', (req, res) => {
   res.send('API is on /api path.')
 })
