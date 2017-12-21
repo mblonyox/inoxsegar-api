@@ -11,6 +11,7 @@ var configDB = require('./config/database')
 var users = require('./routes/users')
 var auth = require('./routes/auth')
 var upload = require('./routes/upload')
+var files = require('./routes/files')
 
 mongoose.Promise = global.Promise
 mongoose.connect(configDB.uri, {useMongoClient: true})
@@ -25,8 +26,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors())
 
-app.use('/upload', upload)
-app.use('/api', auth, users)
+app.use('/api', auth, users, files, upload)
 app.get('/', (req, res) => {
   res.send('API is on /api path.')
 })

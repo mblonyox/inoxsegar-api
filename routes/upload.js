@@ -35,6 +35,6 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     })
 })
 
-router.all('*',verifyToken, server.handle.bind(server))
+router.use('/upload', router.all('*',verifyToken, server.handle.bind(server)))
 
 module.exports = router

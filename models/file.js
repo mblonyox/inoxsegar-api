@@ -21,9 +21,9 @@ module.exports = mongooose.model('File', new Schema({
     date: Date
   }],
   metadata: {
-    like: Number,
-    dislike: Number,
-    download_count: Number
+    likes: [String],
+    dislike:[String],
+    downloads: [String]
   },
   uploaded_date: Date,
   uploaded_length: Number,
