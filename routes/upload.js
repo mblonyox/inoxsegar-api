@@ -1,7 +1,9 @@
 const express = require('express')
 const tus = require('tus-node-server')
+const mongoose = require('mongoose');
 
 const File = require('../models/file')
+const User = require('../models/user')
 const verifyToken = require('../middlewares/verify_token')
 
 const path = 'files'
@@ -23,16 +25,17 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     name: metadata.filename,
     size: metadata.size,
     type: metadata.type,
-    uploader: metadata.uploader,
+    uploader: mongoose.Types.ObjectId(metadata.uploader),
     date: Date(metadata.modified),
     uploaded_date: Date.now(),
     uploaded_length: event.file.uploaded_length,
     uploaded_path: path
   })
   newFile.save()
-    .then((file) => {
-      console.log(file.name + ' created!')
-    })
+  .then((file) => {
+    console.log(file.name + ' created!')
+  })
+
 })
 
 router.all('*',verifyToken, server.handle.bind(server))

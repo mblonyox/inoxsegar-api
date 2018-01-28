@@ -1,29 +1,28 @@
-const mongooose = require('mongoose')
-const Schema = mongooose.Schema
+const mongoose = require('mongoose')
+const Schema = mongoose.Schema
 
-module.exports = mongooose.model('File', new Schema({
+module.exports = mongoose.model('File', new Schema({
   id: String,
   name: String,
   size: Number,
   type: String,
   date: Date,
-  uploader: String,
+  uploader: {type: Schema.Types.ObjectId, ref: 'User'},
   koleksi: {
-    id: String,
+    data: Schema.Types.ObjectId,
     type: String,
-    title: String,
     season: Number,
     episode: Number
   },
   comments: [{
-    username: String,
+    username: {type: Schema.Types.ObjectId, ref: 'User'},
     body: String,
     date: Date
   }],
   metadata: {
-    likes: [String],
-    dislike:[String],
-    downloads: [String]
+    likes: [{type: Schema.Types.ObjectId, ref: 'User'}],
+    dislike:[{type: Schema.Types.ObjectId, ref: 'User'}],
+    downloads: [{type: Schema.Types.ObjectId, ref: 'User'}]
   },
   uploaded_date: Date,
   uploaded_length: Number,

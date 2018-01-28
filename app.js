@@ -8,10 +8,11 @@ var mongoose = require('mongoose')
 var cors = require('cors')
 
 var configDB = require('./config/database')
-var users = require('./routes/users')
+var user = require('./routes/user')
 var auth = require('./routes/auth')
 var upload = require('./routes/upload')
-var files = require('./routes/files')
+var file = require('./routes/file')
+var movie = require('./routes/movie')
 
 mongoose.Promise = global.Promise
 mongoose.connect(configDB.uri, {useMongoClient: true})
@@ -26,7 +27,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors())
 
-app.use('/api', auth, users, files)
+app.use('/api', auth, user, file, movie)
 app.use('/api/upload', upload)
 app.get('/', (req, res) => {
   res.send('API is on /api path.')

@@ -5,13 +5,22 @@ const verifyToken = require('../middlewares/verify_token')
 
 const router = express.Router();
 
-router.get('/files', verifyToken, (req, res) => {
-  File.find({}, null, {limit: 10})
+router.use(verifyToken);
+
+router.get('/file', (req, res) => {
+  File.find({}, null, {limit: 10}).populate('uploader')
   .then(files => {
     res.json({
       success: true,
       message: 'Files found.',
       data: { files }
+    })
+  })
+  .catch(err => {
+    res.json({
+      success: false,
+      message: 'Database error.',
+      error: err
     })
   })
 })

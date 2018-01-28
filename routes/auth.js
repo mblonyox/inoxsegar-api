@@ -36,9 +36,8 @@ router.post('/authenticate', [
           message: 'Wrong email or password.'
         })
       } else {
-        var payload = {
-          username: user.username,
-          email: user.email
+        const payload = {
+          id: user._id
         }
         res.json({
           success: true,
@@ -87,8 +86,7 @@ router.post('/register', [
         var urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
         axios.get(urlEmail)
         var payload = {
-          username: user.username,
-          email: user.email
+          id: user._id
         }
         res.json({
           success: true,
@@ -180,7 +178,7 @@ router.post('/check_username', [
 ], (req, res) => {
   const errors = validationResult(req)
   if(!errors.isEmpty()) {
-    return res.status(422).json({
+    res.status(422).json({
       success: false,
       message: 'Invalid request.',
       errors: errors.formatWith(err => err.msg).mapped()
@@ -190,12 +188,12 @@ router.post('/check_username', [
     username: req.body.username
   }).then((user) => {
     if (user) {
-      return res.json({
+      res.json({
         success: false,
         message: 'Nama Pengguna telah terdaftar.'
       })
     } else {
-      return res.json({
+      res.json({
         success: true,
         message: 'Nama Pengguna tersedia.'
       })
