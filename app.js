@@ -14,6 +14,9 @@ var upload = require('./routes/upload')
 var file = require('./routes/file')
 var movie = require('./routes/movie')
 
+//Debugging purpose
+// mongoose.set('debug', true);
+
 mongoose.Promise = global.Promise
 mongoose.connect(configDB.uri, {useMongoClient: true})
 

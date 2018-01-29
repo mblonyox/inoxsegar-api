@@ -9,8 +9,8 @@ module.exports = mongoose.model('File', new Schema({
   date: Date,
   uploader: {type: Schema.Types.ObjectId, ref: 'User'},
   koleksi: {
-    data: Schema.Types.ObjectId,
-    type: String,
+    data: {type: Schema.Types.ObjectId, refPath: 'koleksi.tipe'},
+    tipe: String,
     season: Number,
     episode: Number
   },

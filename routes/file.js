@@ -8,7 +8,15 @@ const router = express.Router();
 router.use(verifyToken);
 
 router.get('/file', (req, res) => {
-  File.find({}, null, {limit: 10}).populate('uploader')
+  File.find({}, null, {limit: 10})
+  .populate({
+    path: 'uploader',
+    select: '_id username'
+  })
+  .populate({
+    path: 'koleksi.data',
+    select: '_id title year'
+  })
   .then(files => {
     res.json({
       success: true,

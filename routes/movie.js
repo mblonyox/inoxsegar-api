@@ -28,7 +28,14 @@ router.get('/movie', (req, res) => {
 })
 
 router.get('/movie/:movieId', (req, res) => {
-  Movie.findById(req.params.movieId).populate()
+  Movie.findById(req.params.movieId)
+    .populate({
+      path: 'files',
+      populate: {
+        path: 'uploader',
+        select: 'username _id'
+      }
+    })
     .then(movie => {
       res.json({
         success: true,
@@ -94,6 +101,14 @@ router.post('/movie/add-file', [
   check('fileId').exists().withMessage('File id kosong')
     .isMongoId().withMessage('Id File tidak valid')
 ], (req, res) => {
+  const errors = validationResult(req)
+  if(!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: 'Invalid request.',
+      errors: errors.formatWith(err => err.msg).mapped()
+    })
+  }
   let movie, file
   Promise1 = Movie.findById(req.body.movieId)
     .then(m => {
@@ -106,8 +121,10 @@ router.post('/movie/add-file', [
   Promise.all([Promise1, Promise2])
     .then(() => {
       movie.files.push(file._id)
-      file.koleksi.data = movie._id
-      file.koleksi.type = 'Movie'
+      file.koleksi = {
+        data: movie._id,
+        tipe: 'Movie'
+      }
       Promise.all([movie.save(), file.save()])
         .then(() => {
           res.json({
