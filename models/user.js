@@ -15,7 +15,7 @@ module.exports = mongoose.model('User', new Schema({
   email: {type: String, required: true, unique: true},
   password: {type: String, required: true, select: false},
   active: {type: Boolean, default: false},
-  activation_code: {type: String, select: false, default: randomCode()},
+  activation_code: {type: String, select: false, default: randomCode},
   admin:  {type: Boolean, default: false},
   activated_at: {type: Date, default: null}
 }, {
