@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(verifyToken);
 
 router.get('/file', (req, res) => {
-  File.find({}, null, {limit: 10})
+  File.find({}, null, {limit: 20, sort: '-date'})
   .populate({
     path: 'uploader',
     select: '_id username'

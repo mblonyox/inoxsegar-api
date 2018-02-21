@@ -10,7 +10,7 @@ const router = express.Router()
 router.use(verifyToken)
 
 router.get('/movie', (req, res) => {
-  Movie.find({}, null, {limit: 20}).populate()
+  Movie.find({}, null, {limit: 20, sort: '-_id'}).populate()
   .then(movies => {
     res.json({
       success: true,
