@@ -2,27 +2,22 @@ var express = require('express')
 var jwt = require('jsonwebtoken')
 var bcrypt = require('bcrypt')
 var axios = require('axios')
-var { check, validationResult } = require('express-validator/check')
+var { check } = require('express-validator/check')
 var { matchedData } = require('express-validator/filter')
 
 var User = require('../models/user')
 var configJWT = require('../config/jwt')
 var verifyToken = require('../middlewares/verify_token')
+var checkValidation = require('../middlewares/check_validation')
 
 var router = express.Router();
 
+
 router.post('/authenticate', [
   check('email').isEmail().withMessage('Email harus diisi!'),
-  check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!')
+  check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
+  checkValidation
 ], (req, res) => {
-  const errors = validationResult(req)
-  if (!errors.isEmpty()) {
-    return res.status(422).json({
-      success: false,
-      message: 'Invalid request.',
-      errors: errors.formatWith(err => err.msg).mapped()
-    })
-  }
   User.findOne({
     email: req.body.email
   })
@@ -55,16 +50,9 @@ router.post('/register', [
     .isAlphanumeric().withMessage('Nama Pengguna hanya dapat huruf dan angka!')
     .isLength({ min: 5, max: 40}).withMessage('Nama Pengguna minimal 5 karakter dan maksimal 40 karakter!'),
   check('email').isEmail().withMessage('Email tidak valid!'),
-  check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!')
+  check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
+  checkValidation
 ], (req, res) => {
-  const errors = validationResult(req)
-  if(!errors.isEmpty()) {
-    return res.status(422).json({
-      success: false,
-      message: 'Invalid request.',
-      errors: errors.formatWith(err => err.msg).mapped()
-    })
-  }
   let validData = matchedData(req)
   bcrypt.hash(validData.password, 10)
   .then((hash) => {
@@ -174,16 +162,9 @@ router.get('/resend_activation', verifyToken, (req, res) => {
 router.post('/check_username', [
   check('username')
   .isAlphanumeric().withMessage('Nama Pengguna hanya dapat huruf dan angka!')
-  .isLength({ min: 5, max: 40}).withMessage('Nama Pengguna minimal 5 karakter dan maksimal 40 karakter!')
+  .isLength({ min: 5, max: 40}).withMessage('Nama Pengguna minimal 5 karakter dan maksimal 40 karakter!'),
+  checkValidation
 ], (req, res) => {
-  const errors = validationResult(req)
-  if(!errors.isEmpty()) {
-    res.status(422).json({
-      success: false,
-      message: 'Invalid request.',
-      errors: errors.formatWith(err => err.msg).mapped()
-    })
-  }
   User.findOne({
     username: req.body.username
   }).then((user) => {
@@ -199,6 +180,69 @@ router.post('/check_username', [
       })
     }
   })
+})
+
+router.post('/reset_password', [
+  check('email')
+  .isEmail().withMessage('Email harus valid.')
+  ,checkValidation
+], (req, res) => {
+  User.findOne({
+    email: req.body.email
+  }).then((user) => {
+    if(user) {
+      var emailData = {
+        username: user.username,
+        email : user.email,
+        token: jwt.sign({email: user.email}, configJWT.secret)
+      }
+      var urlEmail = 'https://mblonyox.com/inoxsegar-resetpassword-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
+      return axios.get(urlEmail)
+    } else return Promise.reject(new Error('No user found'))
+  })
+  .then((response) => {
+    if (response.data == 'OK') {
+      res.json({
+        success: true,
+        message: 'Password reset email sent.'
+      })
+    } else return Promise.reject(new Error('Email failed to sent. Please try again later.')) 
+  })
+  .catch((err) => {
+    res.status(503).json({
+      success: false,
+      message: err.message
+    })
+  }) 
+})
+
+router.post('change_password', [
+  check('token').withMessage('Token tidak tersedia'),
+  check('password').isLength({min: 8}).withMessage('Sandi minimal 8 karakter!')
+], (req, res) => {
+  try {
+    let payload = jwt.verify(req.body.token, configJWT.secret)
+  } catch (err) {
+    return res.status(422).json({
+      success: false,
+      message: err.message
+    })
+  }
+  User.findOne({email: payload.email})
+  .then((user) => {
+    return bcrypt.hash(req.body.password, 10)
+      .then((hash) => {
+        user.password = hash
+        return user.save()
+      })
+      .then((user) => {
+        return res.json({
+          success: true,
+          message: 'Password berhasil diganti.'
+        })
+      })
+  })
+
 })
 
 module.exports = router
