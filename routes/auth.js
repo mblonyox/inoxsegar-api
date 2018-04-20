@@ -209,19 +209,21 @@ router.post('/reset_password', [
     } else return Promise.reject(new Error('Email failed to sent. Please try again later.')) 
   })
   .catch((err) => {
-    res.status(503).json({
+    return res.status(503).json({
       success: false,
       message: err.message
     })
   }) 
 })
 
-router.post('change_password', [
+router.post('/change_password', [
   check('token').withMessage('Token tidak tersedia'),
-  check('password').isLength({min: 8}).withMessage('Sandi minimal 8 karakter!')
+  check('password').isLength({min: 8}).withMessage('Sandi minimal 8 karakter!'),
+  checkValidation
 ], (req, res) => {
+  let payload
   try {
-    let payload = jwt.verify(req.body.token, configJWT.secret)
+    payload = jwt.verify(req.body.token, configJWT.secret)
   } catch (err) {
     return res.status(422).json({
       success: false,
@@ -241,6 +243,12 @@ router.post('change_password', [
           message: 'Password berhasil diganti.'
         })
       })
+  })
+  .catch((err) => {
+    return res.status(503).json({
+      success: false,
+      message: err.message
+    })
   })
 
 })
