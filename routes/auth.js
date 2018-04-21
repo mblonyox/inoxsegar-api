@@ -266,7 +266,7 @@ router.post('/refresh_token', [
   const now = Math.floor(Date.now() / 1000)
   const extra = payload.remember ? (7*24*60*60) : (60*60)
 
-  if (payload.exp + extra < now ) {
+  if (payload.exp + extra > now ) {
     return res.json({
       success: true,
       message: 'Token diperbarui.',
