@@ -1,16 +1,16 @@
-var express = require('express')
-var jwt = require('jsonwebtoken')
-var bcrypt = require('bcrypt')
-var axios = require('axios')
-var { check } = require('express-validator/check')
-var { matchedData } = require('express-validator/filter')
+const express = require('express')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
+const axios = require('axios')
+const { check } = require('express-validator/check')
+const { matchedData } = require('express-validator/filter')
 
-var User = require('../models/user')
-var configJWT = require('../config/jwt')
-var verifyToken = require('../middlewares/verify_token')
-var checkValidation = require('../middlewares/check_validation')
+const User = require('../models/user')
+const configJWT = require('../config/jwt')
+const verifyToken = require('../middlewares/verify_token')
+const checkValidation = require('../middlewares/check_validation')
 
-var router = express.Router();
+const router = express.Router();
 
 
 router.post('/authenticate', [
@@ -28,17 +28,18 @@ router.post('/authenticate', [
       if (!user || !result) {
         res.status(401).json({
           success: false,
-          message: 'Wrong email or password.'
+          message: 'Email dan/atau sandi salah.'
         })
       } else {
         const payload = {
-          id: user._id
+          id: user._id,
+          remember: !!req.body.remember
         }
         res.json({
           success: true,
-          message: 'Authentication success! Welcome ' + user.username + '.',
-          user: {...user._doc, password: undefined},
-          token: jwt.sign(payload, configJWT.secret)
+          message: 'Autentikasi berhasil! Selamat datang ' + user.username + '.',
+          user: {...user._doc, password: undefined, activation_code: undefined},
+          token: jwt.sign(payload, configJWT.secret, {expiresIn: '10 minutes'})
         })
       }
     })
@@ -53,36 +54,56 @@ router.post('/register', [
   check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
   checkValidation
 ], (req, res) => {
-  let validData = matchedData(req)
-  bcrypt.hash(validData.password, 10)
+  const validData = matchedData(req)
+  User.find({$or: [
+    {username: validData.username},
+    {email: validData.email}
+  ]}).then((users) => {
+    if(users.length > 0) return Promise.reject(new Error('Username atau Email sudah terdaftar.'))
+    return
+  }).then(() => {
+    return bcrypt.hash(validData.password, 10)
+  })
   .then((hash) => {
     validData.password = hash
-    let newUser = new User({
+    const newUser = new User({
       ...validData
     })
-    newUser.save((err, user) => {
-      if(err) res.json({
-        success: false,
-        message: err.message
+    return newUser.save()
+  })
+  .then((user) => {
+    const jwtToken = jwt.sign({id: user._id, remember: false}, configJWT.secret, {expiresIn: '10 minutes'})
+    const userData =  {...user._doc, password: undefined, activation_code: undefined}
+    const emailData = {
+      username: user.username,
+      email: user.email,
+      activation_code: user.activation_code
+    }
+    const urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
+    axios.get(urlEmail)
+      .then((response) => {
+        if (response.data == 'OK') {
+          res.json({
+            success: true,
+            message: 'Pendaftaran berhasil dan email aktivasi terkirim.',
+            user: userData,
+            token: jwtToken
+          })
+        } else return Promise.reject(new Error('Pendaftaran berhasil tetapi email aktivasi gagal terkirim.'))
       })
-      else {
-        var emailData = {
-          username: user.username,
-          email: user.email,
-          activation_code: user.activation_code
-        }
-        var urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
-        axios.get(urlEmail)
-        var payload = {
-          id: user._id
-        }
+      .catch((err) => {
         res.json({
           success: true,
-          message: 'New user created',
-          user,
-          token: jwt.sign(payload, configJWT.secret)
+          message: err.message,
+          user: userData,
+          token: jwtToken
         })
-      }
+      })
+  })
+  .catch((err) => {
+    res.status(503).json({
+      success: false,
+      message: err.message
     })
   })
 })
@@ -102,14 +123,14 @@ router.post('/activate', verifyToken, (req, res) => {
         } else {
           res.json({
             success: true,
-            message: 'User activated.'
+            message: 'Pengguna telah diaktifkan.'
           })
         }
       })
     } else {
       res.status(403).json({
         success: false,
-        message: 'Wrong activation code.'
+        message: 'Kode aktivasi salah.'
       })
     }
   })
@@ -124,23 +145,23 @@ router.post('/activate', verifyToken, (req, res) => {
 router.get('/resend_activation', verifyToken, (req, res) => {
   User.findOne({email: req.user.email}).select('+activation_code')
   .then((user) => {
-    var emailData = {
+    const emailData = {
       username: user.username,
       email: user.email,
       activation_code: user.activation_code
     }
-    var urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
+    const urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
     axios.get(urlEmail)
       .then((response) => {
         if (response.data == 'OK') {
           res.json({
             success: true,
-            message: 'Activation email sent.'
+            message: 'Email aktivasi terkirim.'
           })
         } else {
           res.status(503).json({
             success: false,
-            message: 'Email failed to sent. Please try again later.'
+            message: 'Email gagal dikirim. Coba lagi beberapa saat.'
           })
         }
       })
@@ -159,29 +180,6 @@ router.get('/resend_activation', verifyToken, (req, res) => {
   })
 })
 
-router.post('/check_username', [
-  check('username')
-  .isAlphanumeric().withMessage('Nama Pengguna hanya dapat huruf dan angka!')
-  .isLength({ min: 5, max: 40}).withMessage('Nama Pengguna minimal 5 karakter dan maksimal 40 karakter!'),
-  checkValidation
-], (req, res) => {
-  User.findOne({
-    username: req.body.username
-  }).then((user) => {
-    if (user) {
-      res.json({
-        success: false,
-        message: 'Nama Pengguna telah terdaftar.'
-      })
-    } else {
-      res.json({
-        success: true,
-        message: 'Nama Pengguna tersedia.'
-      })
-    }
-  })
-})
-
 router.post('/reset_password', [
   check('email')
   .isEmail().withMessage('Email harus valid.')
@@ -191,22 +189,22 @@ router.post('/reset_password', [
     email: req.body.email
   }).then((user) => {
     if(user) {
-      var emailData = {
+      const emailData = {
         username: user.username,
         email : user.email,
         token: jwt.sign({email: user.email}, configJWT.secret)
       }
-      var urlEmail = 'https://mblonyox.com/inoxsegar-resetpassword-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
+      const urlEmail = 'https://mblonyox.com/inoxsegar-resetpassword-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
       return axios.get(urlEmail)
-    } else return Promise.reject(new Error('No user found'))
+    } else return Promise.reject(new Error('Tidak ada pengguna email tersebut.'))
   })
   .then((response) => {
     if (response.data == 'OK') {
       res.json({
         success: true,
-        message: 'Password reset email sent.'
+        message: 'Email reset sandi terkirim.'
       })
-    } else return Promise.reject(new Error('Email failed to sent. Please try again later.')) 
+    } else return Promise.reject(new Error('Email gagal dikirim. Coba lagi beberapa saat.')) 
   })
   .catch((err) => {
     return res.status(503).json({
@@ -240,7 +238,7 @@ router.post('/change_password', [
       .then((user) => {
         return res.json({
           success: true,
-          message: 'Password berhasil diganti.'
+          message: 'Sandi berhasil diganti.'
         })
       })
   })
@@ -250,7 +248,37 @@ router.post('/change_password', [
       message: err.message
     })
   })
+})
 
+router.post('/refresh_token', [
+  check('token').withMessage('Token tidak tersedia'),
+  checkValidation
+], (req, res) => {
+  let payload
+  try {
+    payload = jwt.verify(req.body.token, configJWT.secret, {ignoreExpiration: true})
+  } catch (err) {
+    return res.status(422).json({
+      success: false,
+      message: err.message
+    })
+  }
+  const now = Math.floor(Date.now() / 1000)
+  const extra = payload.remember ? (7*24*60*60) : (60*60)
+
+  if (payload.exp + extra < now ) {
+    return res.json({
+      success: true,
+      message: 'Token diperbarui.',
+      token: jwt.sign({id: payload.id, remember: payload.remember}, configJWT.secret, {expiresIn: '10 minutes'})
+    })
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Token gagal dipebarui'
+  })
+  
 })
 
 module.exports = router
