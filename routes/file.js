@@ -50,7 +50,7 @@ router.get('/file', [
       data: { files }
     })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 module.exports = router

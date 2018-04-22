@@ -20,7 +20,7 @@ router.get('/movie', (req, res) => {
       data: { movies }
     })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.get('/movie/:movieId', (req, res) => {
@@ -39,7 +39,7 @@ router.get('/movie/:movieId', (req, res) => {
         data: { movie }
       })
     })
-    .catch(catchErr)
+    .catch(catchErr(res))
 })
 
 function splitTrim(str) {
@@ -76,7 +76,7 @@ router.post('/movie', [
       data: { movie }
     })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.post('/movie/add-file', [
@@ -115,7 +115,7 @@ router.post('/movie/add-file', [
         data: {file}
       })
     })
-    .catch(catchErr)
+    .catch(catchErr(res))
 })
 
 module.exports = router

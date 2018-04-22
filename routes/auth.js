@@ -45,7 +45,7 @@ router.post('/authenticate', [
       }
     })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.post('/register', [
@@ -102,7 +102,7 @@ router.post('/register', [
         })
       })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.post('/activate', verifyToken, [
@@ -127,7 +127,7 @@ router.post('/activate', verifyToken, [
       message: 'Kode aktivasi salah.'
     })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.get('/resend_activation', verifyToken, (req, res) => {
@@ -150,7 +150,7 @@ router.get('/resend_activation', verifyToken, (req, res) => {
         return Promise.reject(new Error( 'Email gagal dikirim. Coba lagi beberapa saat.'))
       })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.post('/reset_password', [
@@ -179,7 +179,7 @@ router.post('/reset_password', [
       })
     } else return Promise.reject(new Error('Email gagal dikirim. Coba lagi beberapa saat.')) 
   })
-  .catch(catchErr) 
+  .catch(catchErr(res)) 
 })
 
 router.post('/change_password', [
@@ -210,7 +210,7 @@ router.post('/change_password', [
         })
       })
   })
-  .catch(catchErr)
+  .catch(catchErr(res))
 })
 
 router.post('/refresh_token', [

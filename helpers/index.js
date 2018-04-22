@@ -1,5 +1,5 @@
 catchErr = require('./catch_err')
 
-exports = {
+module.exports = {
   catchErr
 }
