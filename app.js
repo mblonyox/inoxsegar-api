@@ -17,7 +17,7 @@ var movie = require('./routes/movie')
 // mongoose.set('debug', true);
 
 mongoose.Promise = global.Promise
-mongoose.connect(configDB.uri, {useMongoClient: true})
+mongoose.connect(configDB.uri)
 
 var app = express();
 
