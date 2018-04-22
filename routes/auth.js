@@ -9,9 +9,9 @@ const User = require('../models/user')
 const configJWT = require('../config/jwt')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
+const { catchErr } = require('../helpers')
 
 const router = express.Router();
-
 
 router.post('/authenticate', [
   check('email').isEmail().withMessage('Email harus diisi!'),
@@ -44,6 +44,7 @@ router.post('/authenticate', [
       }
     })
   })
+  .catch(catchErr)
 })
 
 router.post('/register', [
@@ -100,12 +101,7 @@ router.post('/register', [
         })
       })
   })
-  .catch((err) => {
-    res.status(503).json({
-      success: false,
-      message: err.message
-    })
-  })
+  .catch(catchErr)
 })
 
 router.post('/activate', verifyToken, (req, res) => {
@@ -114,32 +110,20 @@ router.post('/activate', verifyToken, (req, res) => {
     if(user && user.activation_code === req.body.kode) {
       user.active = true
       user.activated_at = Date.now()
-      user.save((err, user) => {
-        if(err) {
-          res.status(503).json({
-            success: false,
-            message: err.message
-          })
-        } else {
-          res.json({
+      return user.save()
+        .then((user) => {
+          return res.json({
             success: true,
             message: 'Pengguna telah diaktifkan.'
           })
-        }
-      })
-    } else {
-      res.status(403).json({
-        success: false,
-        message: 'Kode aktivasi salah.'
-      })
-    }
-  })
-  .catch((err) => {
-    res.status(503).json({
+        })
+    } 
+    return res.status(403).json({
       success: false,
-      message: err.message
+      message: 'Kode aktivasi salah.'
     })
   })
+  .catch(catchErr)
 })
 
 router.get('/resend_activation', verifyToken, (req, res) => {
@@ -151,33 +135,18 @@ router.get('/resend_activation', verifyToken, (req, res) => {
       activation_code: user.activation_code
     }
     const urlEmail = 'https://mblonyox.com/inoxsegar-activation-sv2.php?data='+ new Buffer(JSON.stringify(emailData)).toString("base64")
-    axios.get(urlEmail)
+    return axios.get(urlEmail)
       .then((response) => {
         if (response.data == 'OK') {
-          res.json({
+          return res.json({
             success: true,
             message: 'Email aktivasi terkirim.'
           })
-        } else {
-          res.status(503).json({
-            success: false,
-            message: 'Email gagal dikirim. Coba lagi beberapa saat.'
-          })
-        }
-      })
-      .catch((err) => {
-        res.status(503).json({
-          success: false,
-          message: err.message
-        })
+        } 
+        return Promise.reject(new Error( 'Email gagal dikirim. Coba lagi beberapa saat.'))
       })
   })
-  .catch((err) => {
-    res.status(503).json({
-      success: false,
-      message: err.message
-    })
-  })
+  .catch(catchErr)
 })
 
 router.post('/reset_password', [
@@ -206,12 +175,7 @@ router.post('/reset_password', [
       })
     } else return Promise.reject(new Error('Email gagal dikirim. Coba lagi beberapa saat.')) 
   })
-  .catch((err) => {
-    return res.status(503).json({
-      success: false,
-      message: err.message
-    })
-  }) 
+  .catch(catchErr) 
 })
 
 router.post('/change_password', [
@@ -242,12 +206,7 @@ router.post('/change_password', [
         })
       })
   })
-  .catch((err) => {
-    return res.status(503).json({
-      success: false,
-      message: err.message
-    })
-  })
+  .catch(catchErr)
 })
 
 router.post('/refresh_token', [
