@@ -1,9 +1,11 @@
 const express = require('express')
-const { check, validationResult } = require('express-validator/check')
+const { check } = require('express-validator/check')
 
 const Movie = require('../models/movie')
 const File = require('../models/file')
 const verifyToken = require('../middlewares/verify_token')
+const checkValidation = require('../middlewares/check_validation')
+const { catchErr } = require('../helpers')
 
 const router = express.Router()
 
@@ -12,19 +14,13 @@ router.use(verifyToken)
 router.get('/movie', (req, res) => {
   Movie.find({}, null, {limit: 20, sort: '-_id'}).populate()
   .then(movies => {
-    res.json({
+    return res.json({
       success: true,
       message: 'Movies found!',
       data: { movies }
     })
   })
-  .catch(err => {
-    res.json({
-      success: false,
-      message: 'Database error.',
-      error: err
-    })
-  })
+  .catch(catchErr)
 })
 
 router.get('/movie/:movieId', (req, res) => {
@@ -37,19 +33,13 @@ router.get('/movie/:movieId', (req, res) => {
       }
     })
     .then(movie => {
-      res.json({
+      return res.json({
         success: true,
         message: 'Movie found!',
         data: { movie }
       })
     })
-    .catch(err => {
-      res.json({
-        success: false,
-        message: 'Database error.',
-        error: err
-      })
-    })
+    .catch(catchErr)
 })
 
 function splitTrim(str) {
@@ -60,16 +50,9 @@ router.post('/movie', [
   check('title').exists().withMessage('Judul harus ada!'),
   check('year').exists().withMessage('Tahun film harus diisi.')
     .isInt().withMessage('Tahun harus diisi dengan angka'),
-  check('poster').isURL().withMessage('URL Poster yang diisikan salah.')
+  check('poster').isURL().withMessage('URL Poster yang diisikan salah.'),
+  checkValidation
 ], (req, res) => {
-  const errors = validationResult(req)
-  if(!errors.isEmpty()) {
-    return res.status(422).json({
-      success: false,
-      message: 'Invalid request.',
-      errors: errors.formatWith(err => err.msg).mapped()
-    })
-  }
   const newMovie = new Movie({
     imdb: req.body.imdb,
     title: req.body.title,
@@ -87,34 +70,32 @@ router.post('/movie', [
 
   newMovie.save()
   .then(movie => {
-    res.json({
+    return res.json({
       success: true,
       message: 'New movie added.',
       data: { movie }
     })
   })
+  .catch(catchErr)
 })
 
 router.post('/movie/add-file', [
   check('movieId').exists().withMessage('Movie id kosong.')
     .isMongoId().withMessage('Id Movie tidak valid'),
   check('fileId').exists().withMessage('File id kosong')
-    .isMongoId().withMessage('Id File tidak valid')
+    .isMongoId().withMessage('Id File tidak valid'),
+  checkValidation
 ], (req, res) => {
-  const errors = validationResult(req)
-  if(!errors.isEmpty()) {
-    return res.status(422).json({
-      success: false,
-      message: 'Invalid request.',
-      errors: errors.formatWith(err => err.msg).mapped()
-    })
-  }
   let movie, file
   Promise1 = Movie.findById(req.body.movieId)
     .then(m => {
       movie = m
     })
   Promise2 = File.findById(req.body.fileId)
+    .populate({
+      path: 'uploader',
+      select: '_id username'
+    })
     .then(f => {
       file = f
     })
@@ -125,14 +106,16 @@ router.post('/movie/add-file', [
         data: movie._id,
         tipe: 'Movie'
       }
-      Promise.all([movie.save(), file.save()])
-        .then(() => {
-          res.json({
-            success: true,
-            message: 'File berhasil ditambahkan'
-          })
-        })
+      return Promise.all([movie.save(), file.save()])
     })
+    .then(() => {
+      return res.json({
+        success: true,
+        message: 'File berhasil ditambahkan',
+        data: {file}
+      })
+    })
+    .catch(catchErr)
 })
 
 module.exports = router
