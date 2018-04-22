@@ -16,6 +16,7 @@ const router = express.Router();
 router.post('/authenticate', [
   check('email').isEmail().withMessage('Email harus diisi!'),
   check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
+  check('remember').optional(),
   checkValidation
 ], (req, res) => {
   User.findOne({
@@ -104,7 +105,10 @@ router.post('/register', [
   .catch(catchErr)
 })
 
-router.post('/activate', verifyToken, (req, res) => {
+router.post('/activate', verifyToken, [
+  check('kode').withMessage('Kode aktivasi kosong.'),
+  checkValidation
+], (req, res) => {
   User.findOne({email: req.user.email}).select('+activation_code')
   .then((user) => {
     if(user && user.activation_code === req.body.kode) {
