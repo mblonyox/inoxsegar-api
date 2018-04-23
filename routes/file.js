@@ -53,4 +53,20 @@ router.get('/file', [
   .catch(catchErr(res))
 })
 
+router.get('/download/:fileId', (req, res) => {
+  File.findById(req.params.fileId)
+  .select('+id')
+  .then(file => {
+    if (file.metadata.downloads.indexOf(req.user._id) === -1) {
+      file.metadata.downloads.push(req.user._id)
+      return file.save()
+    }
+    return file
+  })
+  .then(file => {
+    return res.redirect(`/${file.uploaded_path}/${file.id}/${file.name}`)
+  })
+  .catch(catchErr(res))
+})
+
 module.exports = router

@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 module.exports = mongoose.model('File', new Schema({
-  id: String,
+  id: {type: String, select: false},
   name: String,
   size: Number,
   type: String,
