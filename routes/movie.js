@@ -1,5 +1,5 @@
 const express = require('express')
-const { check } = require('express-validator/check')
+const { check, query } = require('express-validator/check')
 
 const Movie = require('../models/movie')
 const File = require('../models/file')
@@ -11,8 +11,26 @@ const router = express.Router()
 
 router.use(verifyToken)
 
-router.get('/movie', (req, res) => {
-  Movie.find({}, null, {limit: 20, sort: '-_id'}).populate()
+router.get('/movie',[
+  query('search').isLength({max: 40}).optional(),
+  query('page').isInt({min: 1}).optional(),
+  query('limit').isInt({min: 5, max: 100}).optional(),
+  query('sort').isIn(['date', 'size']).optional(),
+  checkValidation
+], (req, res) => {
+  const search = req.query.search || ''
+  const limit = req.query.limit || 20
+  const page = req.query.page || 1
+
+  Movie.find({
+    title: {
+      '$regex': search
+    }
+  })
+  .skip((page - 1) * limit)
+  .limit(limit)
+  .sort('-date')
+  .populate()
   .then(movies => {
     return res.json({
       success: true,
