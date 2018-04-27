@@ -29,7 +29,7 @@ router.get('/movie',[
   })
   .skip((page - 1) * limit)
   .limit(limit)
-  .sort('-date')
+  .sort('-_id')
   .populate()
   .then(movies => {
     return res.json({
