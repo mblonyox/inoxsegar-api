@@ -64,7 +64,7 @@ router.get('/download/:fileId', (req, res) => {
     return file
   })
   .then(file => {
-    return res.redirect(`/${file.uploaded_path}/${file.id}/${file.name}`)
+    return res.redirect(`${req.protocol}://${req.hostname}/${file.uploaded_path}/${file.id}/${file.name}`)
   })
   .catch(catchErr(res))
 })
