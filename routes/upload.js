@@ -6,7 +6,10 @@ const File = require('../models/file')
 const User = require('../models/user')
 const verifyToken = require('../middlewares/verify_token')
 
-const path = 'files'
+const filePath = 'files'
+const diskpath = require('../config/disk').disk
+const path = filePath + '/' + diskpath
+
 const router = express.Router()
 const server = new tus.Server()
 server.datastore = new tus.FileStore({path})

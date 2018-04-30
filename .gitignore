@@ -32,4 +32,5 @@ npm-debug.log
 # Secret and configuration
 config/database.js
 config/jwt.js
+config/disk.js
 files/**
