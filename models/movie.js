@@ -13,8 +13,9 @@ module.exports = mongoose.model('Movie', new Schema({
   cast: [String],
   plot: String,
   poster: String,
-  uploader: {type: Schema.Types.ObjectId, ref: 'User'},
-  downloader: [{type: Schema.Types.ObjectId, ref: 'User'}],
+  createdBy: {type: Schema.Types.ObjectId, ref: 'User'},
   favorited: [{type: Schema.Types.ObjectId, ref: 'User'}],
   files: [{type: Schema.Types.ObjectId, ref: 'File'}]
+}, {
+  timestamps: true
 }))
