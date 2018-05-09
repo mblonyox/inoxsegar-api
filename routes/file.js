@@ -71,13 +71,13 @@ router.post('/file/:fileId/like', [
   .then(file => {
     if(req.body.action === 'like') {
       if(req.body.cancel) {
-        file.metadata.likes.splice(file.metadata.likes.indexOf(req.user._id))
+        file.metadata.likes.splice(file.metadata.likes.indexOf(req.user._id), 1)
       }
       else file.metadata.likes.push(req.user._id)
     }
     if(req.body.action === 'dislike') {
       if(req.body.cancel) {
-        file.metadata.dislike.splice(file.metadata.dislike.indexOf(req.user._id))
+        file.metadata.dislike.splice(file.metadata.dislike.indexOf(req.user._id), 1)
       }
       else file.metadata.dislike.push(req.user._id)
     }
