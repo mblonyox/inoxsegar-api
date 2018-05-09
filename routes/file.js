@@ -1,5 +1,5 @@
 const express = require('express')
-const { query } = require('express-validator/check')
+const { query, body } = require('express-validator/check')
 
 const File = require('../models/file')
 const Log = require('../models/log')
@@ -36,7 +36,7 @@ router.get('/file', [
   })
   .populate({
     path: 'koleksi.data',
-    select: '_id title year'
+    select: '_id title year poster'
   })
   if (req.query.nonkoleksi) {
     fileQuery = fileQuery.where({
@@ -49,6 +49,45 @@ router.get('/file', [
       success: true,
       message: 'Files found.',
       data: { files }
+    })
+  })
+  .catch(catchErr(res))
+})
+
+router.post('/file/:fileId/like', [
+  body('action').isIn(['like', 'dislike']),
+  body('cancel').isBoolean().optional(),
+  checkValidation
+], (req, res) => {
+  File.findById(req.params.fileId)
+  .populate({
+    path: 'uploader',
+    select: '_id username'
+  })
+  .populate({
+    path: 'koleksi.data',
+    select: '_id title year poster'
+  })
+  .then(file => {
+    if(req.body.action === 'like') {
+      if(req.body.cancel) {
+        file.metadata.likes.splice(file.metadata.likes.indexOf(req.user._id))
+      }
+      else file.metadata.likes.push(req.user._id)
+    }
+    if(req.body.action === 'dislike') {
+      if(req.body.cancel) {
+        file.metadata.dislike.splice(file.metadata.dislike.indexOf(req.user._id))
+      }
+      else file.metadata.dislike.push(req.user._id)
+    }
+    return file.save()
+  })
+  .then(file => {
+    return res.json({
+      success: true,
+      message: req.body.action + ' berhasil disimpan.',
+      data: {file}
     })
   })
   .catch(catchErr(res))
