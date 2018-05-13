@@ -13,6 +13,8 @@ module.exports = mongoose.model('Movie', new Schema({
   cast: [String],
   plot: String,
   poster: String,
+  imdbRating: Number,
+  imdbVotes: Number,
   createdBy: {type: Schema.Types.ObjectId, ref: 'User'},
   favorited: [{type: Schema.Types.ObjectId, ref: 'User'}],
   files: [{type: Schema.Types.ObjectId, ref: 'File'}]
