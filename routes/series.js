@@ -47,12 +47,15 @@ function splitTrim(str) {
 
 router.post('/series', [
   body('title').exists().withMessage('Judul harus ada!'),
-  body('year').exists().withMessage('Tahun film harus diisi.'),
+  body('year').exists().withMessage('Tahun serial harus diisi.'),
   body('poster').isURL().withMessage('URL Poster yang diisikan salah.'),
   checkValidation
 ], (req, res) => {
   const newSeries = new Series({
     imdb: req.body.imdb,
+    tvdb: req.body.tvdb,
+    mal: req.body.mal,
+    category: req.body.category,
     title: req.body.title,
     year: req.body.year,
     genre: splitTrim(req.body.genre),
@@ -63,6 +66,9 @@ router.post('/series', [
     cast: splitTrim(req.body.cast),
     plot: req.body.plot,
     poster: req.body.poster,
+    released: req.body.released,
+    status: req.body.status,
+    network: req.body.network,
     imdbRating: req.body.rating,
     imdbVotes: req.body.votes,
     uploader: req.user._id
@@ -73,6 +79,47 @@ router.post('/series', [
     return res.json({
       success: true,
       message: 'New series added.',
+      data: { series }
+    })
+  })
+  .catch(catchErr(res))
+})
+
+router.post('/series/:seriesId/seasons', (req, res) => {
+  Series.findById(req.params.seriesId)
+  .then(series => {
+    series.seasons.push({
+      name: req.body.name,
+      number: req.body.number,
+      images: req.body.images
+    })
+    return series.save()
+  })
+  .then(series => {
+    return res.json({
+      success: true,
+      message: 'Seasons added.',
+      data: { series }
+    })
+  })
+  .catch(catchErr(res))
+})
+
+router.post('/series/:seriesId/seasons/:seasonId/episodes', (req, res) => {
+  Series.findById(req.params.seriesId)
+  .then(series => {
+    const season = series.seasons.id(req.params.seasonId)
+    season.episodes.push({
+      name: req.body.name,
+      number: req.body.number,
+      aired: req.body.aired,
+    })
+    return series.save()
+  })
+  .then(series => {
+    return res.json({
+      success: true,
+      message: 'Episode added.',
       data: { series }
     })
   })

@@ -84,7 +84,7 @@ router.post('/movie', [
     plot: req.body.plot,
     poster: req.body.poster,
     imdbRating: req.body.rating,
-    imdbVotes: req.body.imdbVotes,
+    imdbVotes: req.body.votes,
     uploader: req.user._id
   })
 

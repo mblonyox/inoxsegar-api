@@ -13,6 +13,7 @@ module.exports = mongoose.model('Movie', new Schema({
   cast: [String],
   plot: String,
   poster: String,
+  released: String,
   imdbRating: Number,
   imdbVotes: Number,
   createdBy: {type: Schema.Types.ObjectId, ref: 'User'},

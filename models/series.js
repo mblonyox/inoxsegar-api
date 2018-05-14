@@ -1,9 +1,25 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
+const Episode = new Schema({
+  name: String,
+  number: Number,
+  aired: String,
+  overview: String,
+  files: [{type: Schema.Types.ObjectId, ref: 'File'}]
+})
+
+const Season = new Schema({
+  name: String,
+  number: Number,
+  images: [String],
+  episodes: [Episode]
+})
+
 module.exports = mongoose.model('Series', new Schema({
   imdb: {type: String, required: false, unique: true},
   tvdb: {type: String, required: false, unique: true},
+  category: String,
   title: String,
   year: String,
   genre: [String],
@@ -14,25 +30,12 @@ module.exports = mongoose.model('Series', new Schema({
   cast: [String],
   plot: String,
   poster: String,
+  released: String,
   imdbRating: Number,
   imdbVotes: Number,
   status: String,
-  firstAired: String,
   network: String,
-  seasons: [{
-    name: String,
-    number: Number,
-    description: String,
-    startedAiring: String,
-    finishedAiring: String,
-    images: [String],
-    episodes: [{
-      name: String,
-      number: Number,
-      aired: String,
-      files: [{type: Schema.Types.ObjectId, ref: 'File'}]
-    }]
-  }],
+  seasons: [Season],
   createdBy: {type: Schema.Types.ObjectId, ref: 'User'},
   favorited: [{type: Schema.Types.ObjectId, ref: 'User'}],
 }, {
