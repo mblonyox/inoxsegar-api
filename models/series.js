@@ -17,8 +17,9 @@ const Season = new Schema({
 })
 
 module.exports = mongoose.model('Series', new Schema({
-  imdb: {type: String, required: false, unique: true},
-  tvdb: {type: String, required: false, unique: true},
+  imdb: {type: String, index: true, unique: true, sparse: true},
+  tvdb: {type: String, index: true, unique: true, sparse: true},
+  mal: {type: String, index: true, unique: true, sparse: true},
   category: String,
   title: String,
   year: String,
@@ -31,10 +32,10 @@ module.exports = mongoose.model('Series', new Schema({
   plot: String,
   poster: String,
   released: String,
+  duration: String,
   imdbRating: Number,
   imdbVotes: Number,
   status: String,
-  network: String,
   seasons: [Season],
   createdBy: {type: Schema.Types.ObjectId, ref: 'User'},
   favorited: [{type: Schema.Types.ObjectId, ref: 'User'}],

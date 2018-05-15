@@ -52,9 +52,10 @@ router.post('/series', [
   checkValidation
 ], (req, res) => {
   const newSeries = new Series({
-    imdb: req.body.imdb,
-    tvdb: req.body.tvdb,
-    mal: req.body.mal,
+    category: req.body.category,
+    imdb: req.body.imdb ? req.body.imdb : undefined,
+    tvdb: req.body.tvdb ? req.body.tvdb : undefined,
+    mal: req.body.mal ? req.body.mal : undefined,
     category: req.body.category,
     title: req.body.title,
     year: req.body.year,
@@ -124,6 +125,33 @@ router.post('/series/:seriesId/seasons/:seasonId/episodes', (req, res) => {
     })
   })
   .catch(catchErr(res))
+})
+
+router.post('/series/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res) => {
+  const seriesPromise = Series.findById(req.params.seriesId)
+  const filePromise = File.findById(req.body.fileId)
+
+  Promise.all([seriesPromise, filePromise])
+    .then(([series, file]) => {
+      const season = series.id(req.params.seasonId)
+      const episode = season.id(req.params.episodeId)
+
+      episode.files.push(file._id)
+      file.koleksi = {
+        data: series._id,
+        tipe: 'Series'
+      }
+
+      return Promise.all([series.save(), file.save()])
+    })
+    .then(([series, file]) => {
+      return res.json({
+        success: true,
+        message: 'File berhasil ditambahkan',
+        data: {series, file}
+      })
+    })
+    .catch(catchErr(res))
 })
 
 module.exports = router

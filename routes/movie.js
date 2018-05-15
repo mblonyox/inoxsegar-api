@@ -83,9 +83,11 @@ router.post('/movie', [
     cast: splitTrim(req.body.cast),
     plot: req.body.plot,
     poster: req.body.poster,
+    released: req.body.released,
+    duration: req.body.duration,
     imdbRating: req.body.rating,
     imdbVotes: req.body.votes,
-    uploader: req.user._id
+    createdBy: req.user._id
   })
 
   newMovie.save()
