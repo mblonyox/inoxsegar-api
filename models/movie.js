@@ -14,7 +14,7 @@ module.exports = mongoose.model('Movie', new Schema({
   plot: String,
   poster: String,
   released: String,
-  duration: String,
+  runtime: String,
   imdbRating: Number,
   imdbVotes: Number,
   createdBy: {type: Schema.Types.ObjectId, ref: 'User'},

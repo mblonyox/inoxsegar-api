@@ -69,7 +69,7 @@ router.post('/series', [
     poster: req.body.poster,
     released: req.body.released,
     status: req.body.status,
-    network: req.body.network,
+    runtime: req.body.runtime,
     imdbRating: req.body.rating,
     imdbVotes: req.body.votes,
     uploader: req.user._id
