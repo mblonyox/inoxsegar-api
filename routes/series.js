@@ -45,6 +45,10 @@ router.get('/series/:seriesId', (req, res) => {
   Series.findById(req.params.seriesId)
     .populate({
       path: 'seasons.episodes.files',
+      populate: {
+        path: 'uploader',
+        select: 'username _id'
+      }
     })
     .then(series => {
       return res.json({
@@ -151,8 +155,17 @@ router.post('/series/:seriesId/seasons/:seasonId/episodes', (req, res) => {
 })
 
 router.post('/series/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res) => {
-  const seriesPromise = Series.findById(req.params.seriesId)
-  const filePromise = File.findById(req.body.fileId)
+  const seriesPromise = Series.findById(req.params.seriesId).populate({
+      path: 'seasons.episodes.files',
+      populate: {
+        path: 'uploader',
+        select: 'username _id'
+      }
+    })
+  const filePromise = File.findById(req.body.fileId).populate({
+      path: 'uploader',
+      select: '_id username'
+    })
 
   Promise.all([seriesPromise, filePromise])
     .then(([series, file]) => {
