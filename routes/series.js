@@ -43,6 +43,9 @@ router.get('/series', [
 
 router.get('/series/:seriesId', (req, res) => {
   Series.findById(req.params.seriesId)
+    .populate({
+      path: 'seasons.episodes.files',
+    })
     .then(series => {
       return res.json({
         success: true,
@@ -153,8 +156,8 @@ router.post('/series/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res
 
   Promise.all([seriesPromise, filePromise])
     .then(([series, file]) => {
-      const season = series.id(req.params.seasonId)
-      const episode = season.id(req.params.episodeId)
+      const season = series.seasons.id(req.params.seasonId)
+      const episode = season.episodes.id(req.params.episodeId)
 
       episode.files.push(file._id)
       file.koleksi = {
