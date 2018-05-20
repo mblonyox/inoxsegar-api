@@ -41,6 +41,18 @@ router.get('/series', [
   .catch(catchErr(res))
 })
 
+router.get('/series/:seriesId', (req, res) => {
+  Series.findById(req.params.seriesId)
+    .then(series => {
+      return res.json({
+        success: true,
+        message: 'series found!',
+        data: { series }
+      })
+    })
+    .catch(catchErr(res))
+})
+
 function splitTrim(str) {
   return str.split(',').map(t => t.trim());
 }
@@ -89,10 +101,18 @@ router.post('/series', [
 router.post('/series/:seriesId/seasons', (req, res) => {
   Series.findById(req.params.seriesId)
   .then(series => {
+    const episodes = []
+    for (let i = 1; i <= req.body.episodes; i++) {
+      episodes.push({
+        name: `Episode ${i}`,
+        number: i
+      })   
+    }
     series.seasons.push({
       name: req.body.name,
       number: req.body.number,
-      images: req.body.images
+      images: req.body.images,
+      episodes
     })
     return series.save()
   })
