@@ -9,10 +9,7 @@ mongoose.connect(configDB.uri)
 
 Movie.find()
   .then(movies => {
-    return processArray(movies, getMovie)
-  })
-  .then(() => {
-    mongoose.disconnect()
+    processArray(movies, getMovie)
   })
 
 async function processArray(array, callback) {

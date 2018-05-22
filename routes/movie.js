@@ -22,10 +22,25 @@ router.get('/movie',[
   const limit = req.query.limit || 20
   const page = req.query.page || 1
 
+  const regex = new RegExp(search, 'i')
+  const stringRegex = {
+    '$regex': regex
+  }
+  const inRegex = {
+    '$in': [regex]
+  }
+
   Movie.find({
-    title: {
-      '$regex': search
-    }
+    '$or': [
+      { title: stringRegex },
+      { genre: inRegex },
+      { country: inRegex },
+      { language: inRegex },
+      { director: inRegex },
+      { writer: inRegex },
+      { cast: inRegex },
+      { plot: stringRegex }
+    ]
   })
   .skip((page - 1) * limit)
   .limit(limit)
