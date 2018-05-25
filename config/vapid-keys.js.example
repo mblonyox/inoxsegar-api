@@ -1,0 +1,7 @@
+// Please generate using the web-push cli
+// $ web-push generate-vapid-keys
+
+module.exports = {
+  vapidPrivateKey: '',
+  vapidPublicKey: ''
+}

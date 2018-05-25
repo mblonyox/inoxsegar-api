@@ -33,4 +33,5 @@ npm-debug.log
 config/database.js
 config/jwt.js
 config/disk.js
+config/vapid-keys.js
 files/**
