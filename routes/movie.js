@@ -5,7 +5,7 @@ const Movie = require('../models/movie')
 const File = require('../models/file')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr } = require('../helpers')
+const { catchErr, sendNotif } = require('../helpers')
 
 const router = express.Router()
 
@@ -107,6 +107,13 @@ router.post('/movie', [
 
   newMovie.save()
   .then(movie => {
+    const payload = JSON.stringify({
+      title: 'InoxSegar - New Movie!',
+      body: `${movie.title} (${movie.year}) - ${movie.plot}`,
+      image: movie.poster,
+      url: '/movie/' + movie._id
+    })
+    sendNotif('movie', payload)
     return res.json({
       success: true,
       message: 'New movie added.',

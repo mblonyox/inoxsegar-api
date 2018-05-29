@@ -18,8 +18,8 @@ module.exports = mongoose.model('User', new Schema({
   activation_code: {type: String, select: false, default: randomCode},
   admin:  {type: Boolean, default: false},
   activated_at: {type: Date, default: null},
-  pushEndpoints: [String],
-  subscriptions: [String]
+  subscriptions: [String],
+  topicSubscribed: [String]
 }, {
   timestamps: true
 }))

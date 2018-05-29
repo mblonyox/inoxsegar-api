@@ -21,15 +21,15 @@ router.get('/user',(req, res) => {
 })
 
 router.post('/push/register', [
-  body('endpoint').isURL(),
+  body('subscription').exists(),
   checkValidation
 ], (req, res) => {
   const user = req.user
-  const endpoints = user.pushEndpoints || []
-  if (!endpoints.includes(req.body.endpoint)) {
-    endpoints.push(req.body.endpoint)
+  const subscriptions = user.subscriptions || []
+  if (!subscriptions.includes(req.body.subscription)) {
+    subscriptions.push(req.body.subscription)
   }
-  user.pushEndpoints = endpoints
+  user.subscriptions = subscriptions
   user.save()
     .then(user => {
       return res.json({
@@ -42,13 +42,13 @@ router.post('/push/register', [
 })
 
 router.post('/push/unregister', [
-  body('endpoint').isURL(),
+  body('subscription').exists(),
   checkValidation
 ], (req, res) => {
   const user = req.user
-  const endpoints = user.pushEndpoints
-  const index = endpoints.indexOf(req.body.endpoint)
-  user.pushEndpoints.splice(index, 1)
+  const subscriptions = user.subscriptions
+  const index = subscriptions.indexOf(req.body.subscription)
+  user.subscriptions.splice(index, 1)
   user.save()
     .then(user => {
       return res.json({
@@ -65,11 +65,11 @@ router.post('/push/subscribe', [
   checkValidation
 ], (req, res) => {
   const user = req.user
-  const subscriptions = user.subscriptions || []
-  if (!subscriptions.includes(req.body.topic)) {
-    subscriptions.push(req.body.topic)
+  const topics = user.topicSubscribed || []
+  if (!topics.includes(req.body.topic)) {
+    topics.push(req.body.topic)
   }
-  user.subscriptions = subscriptions
+  user.topicSubscribed = topics
   user.save()
     .then(user => {
       return res.json({
@@ -86,9 +86,9 @@ router.post('/push/unsubscribe', [
   checkValidation
 ], (req, res) => {
   const user = req.user
-  const subscriptions = user.subscriptions
-  const index = subscriptions.indexOf(req.body.topic)
-  user.subscriptions.splice(index, 1)
+  const topics = user.topicSubscribed
+  const index = topics.indexOf(req.body.topic)
+  user.topicSubscribed.splice(index, 1)
   user.save()
     .then(user => {
       return res.json({

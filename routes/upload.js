@@ -35,7 +35,14 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
     uploaded_path: path
   })
   newFile.save()
-  .then((file) => {
+  .then(file => file.populate('uploader').execPopulate())
+  .then(file => {
+    const payload = JSON.stringify({
+      title: 'InoxSegar - New File Uploaded!',
+      body: `${file.uploader.username} just uploaded: ${file.name}`,
+      url: '/files'
+    })
+    sendNotif('file', payload)
     console.log(file.name + ' created!')
   })
 

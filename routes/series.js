@@ -5,7 +5,7 @@ const Series = require('../models/series')
 const File = require('../models/file')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr } = require('../helpers')
+const { catchErr, sendNotif } = require('../helpers')
 
 const router = express.Router()
 
@@ -96,6 +96,13 @@ router.post('/series', [
 
   newSeries.save()
   .then(series => {
+    const payload = JSON.stringify({
+      title: 'InoxSegar - New Series!',
+      body: `${series.title} (${series.year}) - ${series.plot}`,
+      image: series.poster,
+      url: '/series/' + series._id
+    })
+    sendNotif('series', payload)
     return res.json({
       success: true,
       message: 'New series added.',
