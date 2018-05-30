@@ -33,11 +33,13 @@ async function removeSubscription(subscription) {
 
 module.exports = async (topic, payload) => {
   const subscriptions = await findSubscriptions(topic)
+  const results = []
   for (const subscription of subscriptions) {
     const result = await webpush.sendNotification(JSON.parse(subscription), payload)
     if(result.statusCode == '404' || result.statusCode == '410') {
       await removeSubscription(subscription)
     }
+    results.push(result)
   }
-  return true
+  return results
 }
