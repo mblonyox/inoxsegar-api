@@ -15,12 +15,13 @@ router.get('/movie',[
   query('search').isLength({max: 40}).optional(),
   query('page').isInt({min: 1}).optional(),
   query('limit').isInt({min: 5, max: 100}).optional(),
-  query('sort').isIn(['date', 'size']).optional(),
+  query('sort').isIn(['', '_id', '-_id', 'year', '-year', 'imdbRating', '-imdbRating', 'imdbVotes', '-imdbVotes']).optional(),
   checkValidation
 ], (req, res) => {
   const search = req.query.search || ''
   const limit = req.query.limit || 20
   const page = req.query.page || 1
+  const sort = req.query.sort || '-_id'
 
   const regex = new RegExp(search, 'i')
   const stringRegex = {
@@ -44,7 +45,7 @@ router.get('/movie',[
   })
   .skip((page - 1) * limit)
   .limit(limit)
-  .sort('-_id')
+  .sort(sort)
   .populate()
   .then(movies => {
     return res.json({
