@@ -31,9 +31,9 @@ app.use(cors())
 
 app.use('/api', auth, user, file, movie, series)
 app.use('/api/upload', upload)
-app.get('/', (req, res) => {
-  res.send('API is on /api path.')
-})
+
+// Serve frontend file.
+app.use(express.static('public'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
