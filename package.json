@@ -17,6 +17,8 @@
     "mongoose": "^5.0.15",
     "morgan": "~1.9.0",
     "serve-favicon": "~2.4.5",
+    "socket.io": "^2.1.1",
+    "socketio-jwt": "^4.5.0",
     "tus-node-server": "^0.2.7",
     "web-push": "^3.3.1"
   },

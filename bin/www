@@ -9,6 +9,13 @@ var debug = require('debug')('inoxsegar-backend:server');
 var http = require('http');
 
 /**
+ * Import socket.io handler
+ */
+var socket = require('socket.io');
+var socketioJwt = require('socketio-jwt');
+var socketHandler = require('../socket');
+
+/**
  * Get port from environment and store in Express.
  */
 
@@ -20,6 +27,17 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+
+/**
+ * Initalize Socket IO
+ */
+
+var io = socket(server, {path: '/api/socket'});
+io.on('connection', socketioJwt.authorize({
+  secret: require('../config/jwt').secret,
+  timeout: 15000
+}))
+  .on('authenticated', socketHandler(io));
 
 /**
  * Listen on provided port, on all network interfaces.
