@@ -2,9 +2,11 @@ const Chat = require('./models/chat')
 const User = require('./models/user')
 
 module.exports = (io) => (client) => {
+  let currentUser = null
   User.findById(client.decoded_token.id)
     .then(user => {
       if (user) {
+        currentUser = user
         io.emit('system_message', {
           text: `${user.username} telah bergabung.`,
           time: Date.now()
@@ -27,8 +29,14 @@ module.exports = (io) => (client) => {
     newChat.save()
       .then(chat => chat.populate({path: 'sender', select: '_id username email'}).execPopulate())
       .then(chat => {
-        io.emit('new_message', chat)
-        cb()
+        client.broadcast.emit('new_message', chat)
+        cb(chat)
       })
   })
+    .on('disconnect', (reason) => {
+      client.broadcast.emit('system_message', {
+        text: `${currentUser.username} terputus.`,
+        time: Date.now()
+      })
+    })
 }
