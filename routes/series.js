@@ -11,7 +11,8 @@ const router = express.Router()
 
 router.use(verifyToken)
 
-router.get('/series', [
+//#region Get Series
+router.get('/', [
   query('search').isLength({max: 40}).optional(),
   query('page').isInt({min: 1}).optional(),
   query('limit').isInt({min: 5, max: 100}).optional(),
@@ -40,8 +41,10 @@ router.get('/series', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.get('/series/:seriesId', (req, res) => {
+//#region Get Series Details
+router.get('/:seriesId', (req, res) => {
   Series.findById(req.params.seriesId)
     .populate({
       path: 'seasons.episodes.files',
@@ -59,12 +62,14 @@ router.get('/series/:seriesId', (req, res) => {
     })
     .catch(catchErr(res))
 })
+//#endregion
 
 function splitTrim(str) {
   return str.split(',').map(t => t.trim());
 }
 
-router.post('/series', [
+//#region Post New Series
+router.post('/', [
   body('title').exists().withMessage('Judul harus ada!'),
   body('year').exists().withMessage('Tahun serial harus diisi.'),
   body('poster').isURL().withMessage('URL Poster yang diisikan salah.'),
@@ -111,8 +116,10 @@ router.post('/series', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.post('/series/:seriesId/seasons', (req, res) => {
+//#region Post Series New Season
+router.post('/:seriesId/seasons', (req, res) => {
   Series.findById(req.params.seriesId)
   .then(series => {
     const episodes = []
@@ -120,7 +127,7 @@ router.post('/series/:seriesId/seasons', (req, res) => {
       episodes.push({
         name: `Episode ${i}`,
         number: i
-      })   
+      })
     }
     series.seasons.push({
       name: req.body.name,
@@ -139,8 +146,10 @@ router.post('/series/:seriesId/seasons', (req, res) => {
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.post('/series/:seriesId/seasons/:seasonId/episodes', (req, res) => {
+//#region Post Series New Episode
+router.post('/:seriesId/seasons/:seasonId/episodes', (req, res) => {
   Series.findById(req.params.seriesId)
   .then(series => {
     const season = series.seasons.id(req.params.seasonId)
@@ -160,8 +169,10 @@ router.post('/series/:seriesId/seasons/:seasonId/episodes', (req, res) => {
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.post('/series/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res) => {
+//#region Post Series File
+router.post('/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res) => {
   const seriesPromise = Series.findById(req.params.seriesId).populate({
       path: 'seasons.episodes.files',
       populate: {
@@ -196,5 +207,6 @@ router.post('/series/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res
     })
     .catch(catchErr(res))
 })
+//#endregion
 
 module.exports = router

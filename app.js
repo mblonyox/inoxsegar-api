@@ -24,9 +24,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors())
 
-routes.forEach(route => {
-  app.use('/api', route)
-})
+app.use('/api', routes)
 // Serve frontend file.
 app.use(express.static('public'));
 

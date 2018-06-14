@@ -11,7 +11,8 @@ const router = express.Router();
 
 router.use(verifyToken);
 
-router.get('/file', [
+//#region Get Files
+router.get('/', [
   query('search').isLength({max: 40}).optional(),
   query('page').isInt({min: 1}).optional(),
   query('limit').isInt({min: 5, max: 100}).optional(),
@@ -53,8 +54,10 @@ router.get('/file', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.post('/file/:fileId/like', [
+//#region Post Like File
+router.post('/:fileId/like', [
   body('action').isIn(['like', 'dislike']),
   body('cancel').isBoolean().optional(),
   checkValidation
@@ -92,8 +95,10 @@ router.post('/file/:fileId/like', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.get('/download/:fileId', (req, res) => {
+//#region Get Download File
+router.get('/:fileId/download', (req, res) => {
   File.findById(req.params.fileId)
   .select('+id')
   .then(file => {
@@ -114,28 +119,6 @@ router.get('/download/:fileId', (req, res) => {
   })
   .catch(catchErr(res))
 })
-
-router.get('/log_download', [
-  query('page').isInt({min: 1}).optional(),
-  query('limit').isInt({min: 5, max: 500}).optional(),
-  checkValidation
-], (req, res) => {
-  const limit = req.query.limit || 100
-  const page = req.query.page || 1
-  Log.find({action: 'Download'})
-  .skip((page - 1) * limit)
-  .limit(limit)
-  .sort('-_id')
-  .populate('user')
-  .populate('target')
-  .then(logs => {
-    return res.json({
-      success: true,
-      message: 'Logs found.',
-      data: {logs}
-    })
-  })
-  .catch(catchErr(res))
-})
+//#endregion
 
 module.exports = router

@@ -48,7 +48,6 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
 
 })
 
-const uploadApp = express().all('*',verifyToken, server.handle.bind(server))
-router.use('/upload', uploadApp)
+router.all('*',verifyToken, server.handle.bind(server))
 
 module.exports = router

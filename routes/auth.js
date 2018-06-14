@@ -13,6 +13,7 @@ const { catchErr } = require('../helpers')
 
 const router = express.Router();
 
+//#region Authenticate
 router.post('/authenticate', [
   check('email').isEmail().withMessage('Email harus diisi!'),
   check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
@@ -47,7 +48,9 @@ router.post('/authenticate', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
+//#region Register
 router.post('/register', [
   check('username')
     .isAlphanumeric().withMessage('Nama Pengguna hanya dapat huruf dan angka!')
@@ -104,7 +107,9 @@ router.post('/register', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
+//#region Activate
 router.post('/activate', verifyToken, [
   check('kode').withMessage('Kode aktivasi kosong.'),
   checkValidation
@@ -121,7 +126,7 @@ router.post('/activate', verifyToken, [
             message: 'Pengguna telah diaktifkan.'
           })
         })
-    } 
+    }
     return res.status(403).json({
       success: false,
       message: 'Kode aktivasi salah.'
@@ -129,7 +134,9 @@ router.post('/activate', verifyToken, [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
+//#region Resend Activation
 router.get('/resend_activation', verifyToken, (req, res) => {
   User.findOne({email: req.user.email}).select('+activation_code')
   .then((user) => {
@@ -146,13 +153,15 @@ router.get('/resend_activation', verifyToken, (req, res) => {
             success: true,
             message: 'Email aktivasi terkirim.'
           })
-        } 
+        }
         return Promise.reject(new Error( 'Email gagal dikirim. Coba lagi beberapa saat.'))
       })
   })
   .catch(catchErr(res))
 })
+//#endregion
 
+//#region Reset Password
 router.post('/reset_password', [
   check('email')
   .isEmail().withMessage('Email harus valid.')
@@ -177,11 +186,13 @@ router.post('/reset_password', [
         success: true,
         message: 'Email reset sandi terkirim.'
       })
-    } else return Promise.reject(new Error('Email gagal dikirim. Coba lagi beberapa saat.')) 
+    } else return Promise.reject(new Error('Email gagal dikirim. Coba lagi beberapa saat.'))
   })
-  .catch(catchErr(res)) 
+  .catch(catchErr(res))
 })
+//#endregion
 
+//#region Change Password
 router.post('/change_password', [
   check('token').withMessage('Token tidak tersedia'),
   check('password').isLength({min: 8}).withMessage('Sandi minimal 8 karakter!'),
@@ -212,7 +223,9 @@ router.post('/change_password', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
+//#region Refresh Token
 router.post('/refresh_token', [
   check('token').withMessage('Token tidak tersedia'),
   checkValidation
@@ -241,7 +254,8 @@ router.post('/refresh_token', [
     success: false,
     message: 'Token gagal dipebarui'
   })
-  
+
 })
+//#endregion
 
 module.exports = router

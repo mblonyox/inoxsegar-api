@@ -11,7 +11,8 @@ const router = express.Router()
 
 router.use(verifyToken)
 
-router.get('/movie',[
+//#region Get Movies
+router.get('/',[
   query('search').isLength({max: 40}).optional(),
   query('page').isInt({min: 1}).optional(),
   query('limit').isInt({min: 5, max: 100}).optional(),
@@ -56,8 +57,10 @@ router.get('/movie',[
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.get('/movie/:movieId', (req, res) => {
+//#region Get Movie Details
+router.get('/:movieId', (req, res) => {
   Movie.findById(req.params.movieId)
     .populate({
       path: 'files',
@@ -75,12 +78,14 @@ router.get('/movie/:movieId', (req, res) => {
     })
     .catch(catchErr(res))
 })
+//#endregion
 
 function splitTrim(str) {
   return str.split(',').map(t => t.trim());
 }
 
-router.post('/movie', [
+//#region Post new Movie
+router.post('/', [
   check('title').exists().withMessage('Judul harus ada!'),
   check('year').exists().withMessage('Tahun film harus diisi.')
     .isInt().withMessage('Tahun harus diisi dengan angka'),
@@ -123,16 +128,16 @@ router.post('/movie', [
   })
   .catch(catchErr(res))
 })
+//#endregion
 
-router.post('/movie/add-file', [
-  check('movieId').exists().withMessage('Movie id kosong.')
-    .isMongoId().withMessage('Id Movie tidak valid'),
+//#region Post Movie's File
+router.post('/:movieId/file', [
   check('fileId').exists().withMessage('File id kosong')
     .isMongoId().withMessage('Id File tidak valid'),
   checkValidation
 ], (req, res) => {
   let movie, file
-  Promise1 = Movie.findById(req.body.movieId)
+  Promise1 = Movie.findById(req.params.movieId)
     .then(m => {
       movie = m
     })
@@ -162,5 +167,6 @@ router.post('/movie/add-file', [
     })
     .catch(catchErr(res))
 })
+//#endregion
 
 module.exports = router

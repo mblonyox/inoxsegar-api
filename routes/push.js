@@ -7,13 +7,13 @@ const checkValidation = require('../middlewares/check_validation')
 const { catchErr } = require('../helpers')
 const router = express.Router()
 
-router.get('/push/vapid-key', (req, res) => {
+router.get('/vapid-key', (req, res) => {
   res.send(vapid.vapidPublicKey);
 })
 
 router.use(verifyToken)
 
-router.post('/push/register', [
+router.post('/register', [
   body('subscription').exists(),
   checkValidation
 ], (req, res) => {
@@ -34,7 +34,7 @@ router.post('/push/register', [
     .catch(catchErr(res))
 })
 
-router.post('/push/unregister', [
+router.post('/unregister', [
   body('subscription').exists(),
   checkValidation
 ], (req, res) => {
@@ -53,7 +53,7 @@ router.post('/push/unregister', [
     .catch(catchErr(res))
 })
 
-router.post('/push/subscribe', [
+router.post('/subscribe', [
   body('topic').exists(),
   checkValidation
 ], (req, res) => {
@@ -74,7 +74,7 @@ router.post('/push/subscribe', [
     .catch(catchErr(res))
 })
 
-router.post('/push/unsubscribe', [
+router.post('/unsubscribe', [
   body('topic').exists(),
   checkValidation
 ], (req, res) => {
