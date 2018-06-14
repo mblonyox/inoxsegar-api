@@ -6,7 +6,7 @@ const File = require('../models/file')
 const User = require('../models/user')
 const verifyToken = require('../middlewares/verify_token')
 
-const filePath = 'files'
+const filePath = '/files'
 const diskpath = require('../config/disk').disk
 const path = filePath + '/' + diskpath
 
@@ -48,6 +48,7 @@ server.on(tus.EVENTS.EVENT_UPLOAD_COMPLETE, (event) => {
 
 })
 
-router.all('*',verifyToken, server.handle.bind(server))
+const uploadApp = express().all('*',verifyToken, server.handle.bind(server))
+router.use('/upload', uploadApp)
 
 module.exports = router

@@ -7,12 +7,7 @@ var mongoose = require('mongoose')
 var cors = require('cors')
 
 var configDB = require('./config/database')
-var user = require('./routes/user')
-var auth = require('./routes/auth')
-var upload = require('./routes/upload')
-var file = require('./routes/file')
-var movie = require('./routes/movie')
-var series = require('./routes/series')
+var routes = require('./routes')
 
 //Debugging purpose
 // mongoose.set('debug', true);
@@ -29,9 +24,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors())
 
-app.use('/api', auth, user, file, movie, series)
-app.use('/api/upload', upload)
-
+routes.forEach(route => {
+  app.use('/api', route)
+})
 // Serve frontend file.
 app.use(express.static('public'));
 
