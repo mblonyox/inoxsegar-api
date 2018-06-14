@@ -5,7 +5,7 @@ const Movie = require('../models/movie')
 const File = require('../models/file')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr, sendNotif } = require('../helpers')
+const { sendNotif } = require('../helpers')
 
 const router = express.Router()
 
@@ -18,7 +18,7 @@ router.get('/',[
   query('limit').isInt({min: 5, max: 100}).optional(),
   query('sort').isIn(['', '_id', '-_id', 'year', '-year', 'imdbRating', '-imdbRating', 'imdbVotes', '-imdbVotes']).optional(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const search = req.query.search || ''
   const limit = req.query.limit || 20
   const page = req.query.page || 1
@@ -55,12 +55,12 @@ router.get('/',[
       data: { movies }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Get Movie Details
-router.get('/:movieId', (req, res) => {
+router.get('/:movieId', (req, res, next) => {
   Movie.findById(req.params.movieId)
     .populate({
       path: 'files',
@@ -76,7 +76,7 @@ router.get('/:movieId', (req, res) => {
         data: { movie }
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 //#endregion
 
@@ -91,7 +91,7 @@ router.post('/', [
     .isInt().withMessage('Tahun harus diisi dengan angka'),
   check('poster').isURL().withMessage('URL Poster yang diisikan salah.'),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const newMovie = new Movie({
     imdb: req.body.imdb,
     title: req.body.title,
@@ -126,7 +126,7 @@ router.post('/', [
       data: { movie }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
@@ -135,7 +135,7 @@ router.post('/:movieId/file', [
   check('fileId').exists().withMessage('File id kosong')
     .isMongoId().withMessage('Id File tidak valid'),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   let movie, file
   Promise1 = Movie.findById(req.params.movieId)
     .then(m => {
@@ -165,7 +165,7 @@ router.post('/:movieId/file', [
         data: {file}
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 //#endregion
 

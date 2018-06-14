@@ -5,7 +5,6 @@ const File = require('../models/file')
 const Log = require('../models/log')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr } = require('../helpers')
 
 const router = express.Router();
 
@@ -19,7 +18,7 @@ router.get('/', [
   query('sort').isIn(['date', 'size']).optional(),
   query('nonkoleksi').isBoolean().optional(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const search = req.query.search || ''
   const limit = req.query.limit || 20
   const page = req.query.page || 1
@@ -52,7 +51,7 @@ router.get('/', [
       data: { files }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
@@ -61,7 +60,7 @@ router.post('/:fileId/like', [
   body('action').isIn(['like', 'dislike']),
   body('cancel').isBoolean().optional(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   File.findById(req.params.fileId)
   .populate({
     path: 'uploader',
@@ -93,12 +92,12 @@ router.post('/:fileId/like', [
       data: {file}
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Get Download File
-router.get('/:fileId/download', (req, res) => {
+router.get('/:fileId/download', (req, res, next) => {
   File.findById(req.params.fileId)
   .select('+id')
   .then(file => {
@@ -117,7 +116,7 @@ router.get('/:fileId/download', (req, res) => {
   .then(file => {
     return res.redirect(`${req.protocol}://${req.hostname}/${file.uploaded_path}/${file.id}/${file.name}`)
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 

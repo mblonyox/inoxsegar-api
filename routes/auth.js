@@ -9,7 +9,6 @@ const User = require('../models/user')
 const configJWT = require('../config/jwt')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr } = require('../helpers')
 
 const router = express.Router();
 
@@ -19,7 +18,7 @@ router.post('/authenticate', [
   check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
   check('remember').optional(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   User.findOne({
     email: req.body.email
   })
@@ -46,7 +45,7 @@ router.post('/authenticate', [
       }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
@@ -58,7 +57,7 @@ router.post('/register', [
   check('email').isEmail().withMessage('Email tidak valid!'),
   check('password').isLength({ min: 8 }).withMessage('Sandi minimal 8 karakter!'),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const validData = matchedData(req)
   User.find({$or: [
     {username: validData.username},
@@ -105,7 +104,7 @@ router.post('/register', [
         })
       })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
@@ -113,7 +112,7 @@ router.post('/register', [
 router.post('/activate', verifyToken, [
   check('kode').withMessage('Kode aktivasi kosong.'),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   User.findOne({email: req.user.email}).select('+activation_code')
   .then((user) => {
     if(user && user.activation_code === req.body.kode) {
@@ -132,12 +131,12 @@ router.post('/activate', verifyToken, [
       message: 'Kode aktivasi salah.'
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Resend Activation
-router.get('/resend_activation', verifyToken, (req, res) => {
+router.get('/resend_activation', verifyToken, (req, res, next) => {
   User.findOne({email: req.user.email}).select('+activation_code')
   .then((user) => {
     const emailData = {
@@ -157,7 +156,7 @@ router.get('/resend_activation', verifyToken, (req, res) => {
         return Promise.reject(new Error( 'Email gagal dikirim. Coba lagi beberapa saat.'))
       })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
@@ -166,7 +165,7 @@ router.post('/reset_password', [
   check('email')
   .isEmail().withMessage('Email harus valid.')
   ,checkValidation
-], (req, res) => {
+], (req, res, next) => {
   User.findOne({
     email: req.body.email
   }).then((user) => {
@@ -188,7 +187,7 @@ router.post('/reset_password', [
       })
     } else return Promise.reject(new Error('Email gagal dikirim. Coba lagi beberapa saat.'))
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
@@ -197,7 +196,7 @@ router.post('/change_password', [
   check('token').withMessage('Token tidak tersedia'),
   check('password').isLength({min: 8}).withMessage('Sandi minimal 8 karakter!'),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   let payload
   try {
     payload = jwt.verify(req.body.token, configJWT.secret)
@@ -221,7 +220,7 @@ router.post('/change_password', [
         })
       })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 

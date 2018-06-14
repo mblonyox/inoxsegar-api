@@ -4,7 +4,6 @@ const { body } = require('express-validator/check')
 const vapid = require('../config/vapid-keys')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr } = require('../helpers')
 const router = express.Router()
 
 router.get('/vapid-key', (req, res) => {
@@ -16,7 +15,7 @@ router.use(verifyToken)
 router.post('/register', [
   body('subscription').exists(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const user = req.user
   const subscriptions = user.subscriptions || []
   if (!subscriptions.includes(req.body.subscription)) {
@@ -31,13 +30,13 @@ router.post('/register', [
         data: {user}
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 
 router.post('/unregister', [
   body('subscription').exists(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const user = req.user
   const subscriptions = user.subscriptions
   const index = subscriptions.indexOf(req.body.subscription)
@@ -50,13 +49,13 @@ router.post('/unregister', [
         data: {user}
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 
 router.post('/subscribe', [
   body('topic').exists(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const user = req.user
   const topics = user.topicSubscribed || []
   if (!topics.includes(req.body.topic)) {
@@ -71,13 +70,13 @@ router.post('/subscribe', [
         data: {user}
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 
 router.post('/unsubscribe', [
   body('topic').exists(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const user = req.user
   const topics = user.topicSubscribed
   const index = topics.indexOf(req.body.topic)
@@ -90,7 +89,7 @@ router.post('/unsubscribe', [
         data: {user}
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 
 module.exports = router

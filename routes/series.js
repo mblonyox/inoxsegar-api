@@ -5,7 +5,7 @@ const Series = require('../models/series')
 const File = require('../models/file')
 const verifyToken = require('../middlewares/verify_token')
 const checkValidation = require('../middlewares/check_validation')
-const { catchErr, sendNotif } = require('../helpers')
+const { sendNotif } = require('../helpers')
 
 const router = express.Router()
 
@@ -18,7 +18,7 @@ router.get('/', [
   query('limit').isInt({min: 5, max: 100}).optional(),
   query('sort').isIn(['date', 'size']).optional(),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const search = req.query.search || ''
   const limit = req.query.limit || 20
   const page = req.query.page || 1
@@ -39,12 +39,12 @@ router.get('/', [
       data: { series }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Get Series Details
-router.get('/:seriesId', (req, res) => {
+router.get('/:seriesId', (req, res, next) => {
   Series.findById(req.params.seriesId)
     .populate({
       path: 'seasons.episodes.files',
@@ -60,7 +60,7 @@ router.get('/:seriesId', (req, res) => {
         data: { series }
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 //#endregion
 
@@ -74,7 +74,7 @@ router.post('/', [
   body('year').exists().withMessage('Tahun serial harus diisi.'),
   body('poster').isURL().withMessage('URL Poster yang diisikan salah.'),
   checkValidation
-], (req, res) => {
+], (req, res, next) => {
   const newSeries = new Series({
     category: req.body.category,
     imdb: req.body.imdb ? req.body.imdb : undefined,
@@ -114,12 +114,12 @@ router.post('/', [
       data: { series }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Post Series New Season
-router.post('/:seriesId/seasons', (req, res) => {
+router.post('/:seriesId/seasons', (req, res, next) => {
   Series.findById(req.params.seriesId)
   .then(series => {
     const episodes = []
@@ -144,12 +144,12 @@ router.post('/:seriesId/seasons', (req, res) => {
       data: { series }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Post Series New Episode
-router.post('/:seriesId/seasons/:seasonId/episodes', (req, res) => {
+router.post('/:seriesId/seasons/:seasonId/episodes', (req, res, next) => {
   Series.findById(req.params.seriesId)
   .then(series => {
     const season = series.seasons.id(req.params.seasonId)
@@ -167,12 +167,12 @@ router.post('/:seriesId/seasons/:seasonId/episodes', (req, res) => {
       data: { series }
     })
   })
-  .catch(catchErr(res))
+  .catch(next)
 })
 //#endregion
 
 //#region Post Series File
-router.post('/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res) => {
+router.post('/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res, next) => {
   const seriesPromise = Series.findById(req.params.seriesId).populate({
       path: 'seasons.episodes.files',
       populate: {
@@ -205,7 +205,7 @@ router.post('/:seriesId/seasons/:seasonId/episodes/:episodeId', (req, res) => {
         data: {series, file}
       })
     })
-    .catch(catchErr(res))
+    .catch(next)
 })
 //#endregion
 
