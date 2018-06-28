@@ -1,30 +1,27 @@
 const Chat = require('./models/chat')
 const User = require('./models/user')
 
-const onlineUsers = {}
-
-function getOnlineUsers() {
-  return Object.values(onlineUsers).filter(user => user.sockets && user.sockets.length)
+function getOnlineUsers(sockets) {
+  return Object.values(sockets)
+    .reduce((users, socket) => {
+      if(socket.user && !users.some(user => user._id === socket.user._id)) {
+        users.push({
+          _id: socket.user._id,
+          username: socket.user.username,
+          email: socket.user.username
+        })
+      }
+      return users
+    }, [])
 }
 
 module.exports = (io) => (client) => {
-  let currentUser = null
   User.findById(client.decoded_token.id)
     .then(user => {
       if (user) {
-        currentUser = user
-        if(onlineUsers[user._id]) {
-          onlineUsers[user._id].sockets.push(client.id)
-        } else {
-          onlineUsers[user._id] = {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            sockets: [client.id]
-          }
-        }
-        io.emit('online_users', getOnlineUsers())
+        client.user = user
       }
+      io.emit('online_users', getOnlineUsers(io.sockets.connected))
     })
 
   Chat.find()
@@ -47,8 +44,6 @@ module.exports = (io) => (client) => {
       })
   })
     .on('disconnect', (reason) => {
-      let index = onlineUsers[currentUser._id].sockets.indexOf(client.id)
-      onlineUsers[currentUser._id].sockets.splice(index, 1)
-      io.emit('online_users', getOnlineUsers())
+      io.emit('online_users', getOnlineUsers(io.sockets.connected))
     })
 }
