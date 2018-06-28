@@ -4,7 +4,7 @@ const User = require('./models/user')
 function getOnlineUsers(sockets) {
   return Object.values(sockets)
     .reduce((users, socket) => {
-      if(socket.user && !users.some(user => user._id === socket.user._id)) {
+      if(socket.user && !users.some(user => user._id.toString() === socket.user._id.toString())) {
         users.push({
           _id: socket.user._id,
           username: socket.user.username,
