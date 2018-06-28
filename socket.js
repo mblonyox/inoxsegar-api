@@ -1,16 +1,29 @@
 const Chat = require('./models/chat')
 const User = require('./models/user')
 
+const onlineUsers = {}
+
+function getOnlineUsers() {
+  return Object.values(onlineUsers).filter(user => user.sockets && user.sockets.length)
+}
+
 module.exports = (io) => (client) => {
   let currentUser = null
   User.findById(client.decoded_token.id)
     .then(user => {
       if (user) {
         currentUser = user
-        io.emit('system_message', {
-          text: `${user.username} telah bergabung.`,
-          time: Date.now()
-        })
+        if(onlineUsers[user._id]) {
+          onlineUsers[user._id].sockets.push(client.id)
+        } else {
+          onlineUsers[user._id] = {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            sockets: [client.id]
+          }
+        }
+        io.emit('online_users', getOnlineUsers())
       }
     })
 
@@ -34,9 +47,8 @@ module.exports = (io) => (client) => {
       })
   })
     .on('disconnect', (reason) => {
-      client.broadcast.emit('system_message', {
-        text: `${currentUser.username} terputus.`,
-        time: Date.now()
-      })
+      let index = onlineUsers[currentUser._id].sockets.indexOf(client.id)
+      onlineUsers[currentUser._id].sockets.splice(index, 1)
+      io.emit('online_users', getOnlineUsers())
     })
 }
