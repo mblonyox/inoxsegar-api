@@ -8,7 +8,7 @@ function getOnlineUsers(sockets) {
         users.push({
           _id: socket.user._id,
           username: socket.user.username,
-          email: socket.user.username
+          email: socket.user.email
         })
       }
       return users
