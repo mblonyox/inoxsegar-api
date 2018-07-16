@@ -8,6 +8,7 @@ const checkValidation = require('../middlewares/check_validation')
 const router = express.Router()
 router.use(verifyToken)
 
+//#region Log Download
 router.get('/log_download', [
   query('page').isInt({min: 1}).optional(),
   query('limit').isInt({min: 5, max: 500}).optional(),
@@ -30,5 +31,14 @@ router.get('/log_download', [
   })
   .catch(next)
 })
+//#endregion
+
+//#region Top Download
+router.get('/top_download', [
+  query('range').isInt({min: 1}).optional()
+], (req, res, next) => {
+
+})
+//#endregion
 
 module.exports = router
